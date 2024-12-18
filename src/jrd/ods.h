@@ -467,23 +467,26 @@ struct header_page
 	pag hdr_header;
 	USHORT hdr_page_size;				// Page size of database
 	USHORT hdr_ods_version;				// Version of on-disk structure
+	USHORT hdr_ods_minor;				// Update version of ODS
+	USHORT hdr_flags;					// Flag settings, see below
 	ULONG hdr_PAGES;					// Page number of PAGES relation
+	ULONG hdr_page_buffers;				// Page buffers for database cache
 	FB_UINT64 hdr_next_transaction;		// Next transaction id
 	FB_UINT64 hdr_oldest_transaction;	// Oldest interesting transaction
 	FB_UINT64 hdr_oldest_active;		// Oldest transaction thought active
 	FB_UINT64 hdr_oldest_snapshot;		// Oldest snapshot of active transactions
 	FB_UINT64 hdr_attachment_id;		// Next attachment id
+	struct
+	{
+		UCHAR hdr_cpu;					// CPU database was created on
+		UCHAR hdr_os;					// OS database was created under
+		UCHAR hdr_cc;					// Compiler of engine on which database was created
+		UCHAR hdr_compat;				// Cross-platform database transfer compatibility flags
+	} hdr_db_impl;
 	SLONG hdr_creation_date[2];			// Date/time of creation
-	USHORT hdr_sequence;				// sequence number of file
-	USHORT hdr_flags;					// Flag settings, see below
 	SLONG hdr_shadow_count;				// Event count for shadow synchronization
-	UCHAR hdr_cpu;						// CPU database was created on
-	UCHAR hdr_os;						// OS database was created under
-	UCHAR hdr_cc;						// Compiler of engine on which database was created
-	UCHAR hdr_compatibility_flags;		// Cross-platform database transfer compatibility flags
-	USHORT hdr_ods_minor;				// Update version of ODS
+	USHORT hdr_sequence;				// sequence number of file
 	USHORT hdr_end;						// offset of HDR_end in page
-	ULONG hdr_page_buffers;				// Page buffers for database cache
 	ULONG hdr_crypt_page;				// Page at which processing is in progress
 	TEXT hdr_crypt_plugin[32];			// Name of plugin used to crypt this DB
 	UCHAR hdr_data[1];					// Misc data
@@ -493,23 +496,20 @@ static_assert(sizeof(struct header_page) == 136, "struct header_page size mismat
 static_assert(offsetof(struct header_page, hdr_header) == 0, "hdr_header offset mismatch");
 static_assert(offsetof(struct header_page, hdr_page_size) == 16, "hdr_page_size offset mismatch");
 static_assert(offsetof(struct header_page, hdr_ods_version) == 18, "hdr_ods_version offset mismatch");
-static_assert(offsetof(struct header_page, hdr_PAGES) == 20, "hdr_PAGES offset mismatch");
-static_assert(offsetof(struct header_page, hdr_next_transaction) == 24, "hdr_next_transaction offset mismatch");
-static_assert(offsetof(struct header_page, hdr_oldest_transaction) == 32, "hdr_oldest_transaction offset mismatch");
-static_assert(offsetof(struct header_page, hdr_oldest_active) == 40, "hdr_oldest_active offset mismatch");
-static_assert(offsetof(struct header_page, hdr_oldest_snapshot) == 48, "hdr_oldest_snapshot offset mismatch");
-static_assert(offsetof(struct header_page, hdr_attachment_id) == 56, "hdr_attachment_id offset mismatch");
-static_assert(offsetof(struct header_page, hdr_creation_date) == 64, "hdr_creation_date offset mismatch");
-static_assert(offsetof(struct header_page, hdr_sequence) == 72, "hdr_sequence offset mismatch");
-static_assert(offsetof(struct header_page, hdr_flags) == 74, "hdr_flags offset mismatch");
-static_assert(offsetof(struct header_page, hdr_shadow_count) == 76, "hdr_shadow_count offset mismatch");
-static_assert(offsetof(struct header_page, hdr_cpu) == 80, "hdr_cpu offset mismatch");
-static_assert(offsetof(struct header_page, hdr_os) == 81, "hdr_os offset mismatch");
-static_assert(offsetof(struct header_page, hdr_cc) == 82, "hdr_cc offset mismatch");
-static_assert(offsetof(struct header_page, hdr_compatibility_flags) == 83, "hdr_compatibility_flags offset mismatch");
-static_assert(offsetof(struct header_page, hdr_ods_minor) == 84, "hdr_ods_minor offset mismatch");
-static_assert(offsetof(struct header_page, hdr_end) == 86, "hdr_end offset mismatch");
-static_assert(offsetof(struct header_page, hdr_page_buffers) == 88, "hdr_page_buffers offset mismatch");
+static_assert(offsetof(struct header_page, hdr_ods_minor) == 20, "hdr_ods_minor offset mismatch");
+static_assert(offsetof(struct header_page, hdr_flags) == 22, "hdr_flags offset mismatch");
+static_assert(offsetof(struct header_page, hdr_PAGES) == 24, "hdr_PAGES offset mismatch");
+static_assert(offsetof(struct header_page, hdr_page_buffers) == 28, "hdr_page_buffers offset mismatch");
+static_assert(offsetof(struct header_page, hdr_next_transaction) == 32, "hdr_next_transaction offset mismatch");
+static_assert(offsetof(struct header_page, hdr_oldest_transaction) == 40, "hdr_oldest_transaction offset mismatch");
+static_assert(offsetof(struct header_page, hdr_oldest_active) == 48, "hdr_oldest_active offset mismatch");
+static_assert(offsetof(struct header_page, hdr_oldest_snapshot) == 56, "hdr_oldest_snapshot offset mismatch");
+static_assert(offsetof(struct header_page, hdr_attachment_id) == 64, "hdr_attachment_id offset mismatch");
+static_assert(offsetof(struct header_page, hdr_db_impl) == 72, "hdr_shadow_count offset mismatch");
+static_assert(offsetof(struct header_page, hdr_creation_date) == 76, "hdr_creation_date offset mismatch");
+static_assert(offsetof(struct header_page, hdr_shadow_count) == 84, "hdr_shadow_count offset mismatch");
+static_assert(offsetof(struct header_page, hdr_sequence) == 88, "hdr_sequence offset mismatch");
+static_assert(offsetof(struct header_page, hdr_end) == 90, "hdr_end offset mismatch");
 static_assert(offsetof(struct header_page, hdr_crypt_page) == 92, "hdr_crypt_page offset mismatch");
 static_assert(offsetof(struct header_page, hdr_crypt_plugin) == 96, "hdr_crypt_plugin offset mismatch");
 static_assert(offsetof(struct header_page, hdr_data) == 128, "hdr_data offset mismatch");
