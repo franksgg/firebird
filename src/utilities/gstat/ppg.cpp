@@ -62,12 +62,12 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 	uSvc->printf(false, "\tPage size\t\t%d\n", header->hdr_page_size);
 	uSvc->printf(false, "\tODS version\t\t%d.%d\n",
 			header->hdr_ods_version & ~ODS_FIREBIRD_FLAG, header->hdr_ods_minor);
-	uSvc->printf(false, "\tOldest transaction\t%" SQUADFORMAT"\n", Ods::getOIT(header));
-	uSvc->printf(false, "\tOldest active\t\t%" SQUADFORMAT"\n", Ods::getOAT(header));
-	uSvc->printf(false, "\tOldest snapshot\t\t%" SQUADFORMAT"\n", Ods::getOST(header));
-	uSvc->printf(false, "\tNext transaction\t%" SQUADFORMAT"\n", Ods::getNT(header));
+	uSvc->printf(false, "\tOldest transaction\t%" SQUADFORMAT"\n", header->hdr_oldest_transaction);
+	uSvc->printf(false, "\tOldest active\t\t%" SQUADFORMAT"\n", header->hdr_oldest_active);
+	uSvc->printf(false, "\tOldest snapshot\t\t%" SQUADFORMAT"\n", header->hdr_oldest_snapshot);
+	uSvc->printf(false, "\tNext transaction\t%" SQUADFORMAT"\n", header->hdr_next_transaction);
 	uSvc->printf(false, "\tSequence number\t\t%d\n", header->hdr_sequence);
-	uSvc->printf(false, "\tNext attachment ID\t%" SQUADFORMAT"\n", Ods::getAttID(header));
+	uSvc->printf(false, "\tNext attachment ID\t%" SQUADFORMAT"\n", header->hdr_attachment_id);
 
 	Firebird::DbImplementation imp(header);
 	uSvc->printf(false, "\tImplementation\t\tHW=%s %s-endian OS=%s CC=%s\n",

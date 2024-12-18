@@ -4996,8 +4996,8 @@ dsc* evlGetTranCN(thread_db* tdbb, const SysFunction* function, const NestValueA
 	if ((traNum > traMax) && !(dbb->dbb_flags & DBB_shared))
 	{
 		WIN window(HEADER_PAGE_NUMBER);
-		const Ods::header_page* header = (Ods::header_page*) CCH_FETCH(tdbb, &window, LCK_read, pag_header);
-		traMax = Ods::getNT(header);
+		const auto header = (const Ods::header_page*) CCH_FETCH(tdbb, &window, LCK_read, pag_header);
+		traMax = header->hdr_next_transaction;
 		CCH_RELEASE(tdbb, &window);
 	}
 

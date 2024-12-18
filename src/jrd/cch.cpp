@@ -4889,19 +4889,19 @@ static bool write_page(thread_db* tdbb, BufferDesc* bdb, FbStatusVector* const s
 	// the next_transaction > oldest_active transaction
 	if (bdb->bdb_page == HEADER_PAGE_NUMBER)
 	{
-		const header_page* const header = (header_page*) page;
+		const auto header = (const header_page*) page;
 
-		const TraNumber next_transaction = Ods::getNT(header);
-		const TraNumber oldest_active = Ods::getOAT(header);
-		const TraNumber oldest_transaction = Ods::getOIT(header);
+		const TraNumber next_transaction = header->hdr_next_transaction;
+		const TraNumber oldest_transaction = header->hdr_oldest_transaction;
+		const TraNumber oldest_active = header->hdr_oldest_active;
 
 		if (next_transaction)
 		{
-			if (oldest_active > next_transaction)
-				BUGCHECK(266);	// next transaction older than oldest active
-
 			if (oldest_transaction > next_transaction)
 				BUGCHECK(267);	// next transaction older than oldest transaction
+
+			if (oldest_active > next_transaction)
+				BUGCHECK(266);	// next transaction older than oldest active
 		}
 	}
 
@@ -4973,7 +4973,10 @@ static bool write_page(thread_db* tdbb, BufferDesc* bdb, FbStatusVector* const s
 			{
 				// We finished. Adjust transaction accounting and get ready for exit
 				if (bdb->bdb_page == HEADER_PAGE_NUMBER)
-					dbb->dbb_last_header_write = Ods::getNT((header_page*) page);
+				{
+					const auto header = (const header_page*) page;
+					dbb->dbb_last_header_write = header->hdr_next_transaction;
+				}
 			}
 			else
 			{
@@ -5003,7 +5006,10 @@ static bool write_page(thread_db* tdbb, BufferDesc* bdb, FbStatusVector* const s
 						}
 
 						if (bdb->bdb_page == HEADER_PAGE_NUMBER)
-							dbb->dbb_last_header_write = Ods::getNT((header_page*) page);
+						{
+							const auto header = (const header_page*) page;
+							dbb->dbb_last_header_write = header->hdr_next_transaction;
+						}
 
 						if (dbb->dbb_shadow && !isTempPage)
 							return CCH_write_all_shadows(tdbb, 0, bdb, page, status, inAst);

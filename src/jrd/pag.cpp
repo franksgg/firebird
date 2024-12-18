@@ -836,9 +836,7 @@ AttNumber PAG_attachment_id(thread_db* tdbb)
 
 		CCH_MARK(tdbb, &window);
 
-		const AttNumber att_id = Ods::getAttID(header) + 1;
-		attachment->att_attachment_id = att_id;
-		Ods::writeAttID(header, att_id);
+		attachment->att_attachment_id = ++header->hdr_attachment_id;
 		dbb->assignLatestAttachmentId(attachment->att_attachment_id);
 
 		CCH_RELEASE(tdbb, &window);
@@ -1060,10 +1058,10 @@ void PAG_header(thread_db* tdbb, bool info, const TriState newForceWrite)
 
 	try {
 
-	const TraNumber next_transaction = Ods::getNT(header);
-	const TraNumber oldest_transaction = Ods::getOIT(header);
-	const TraNumber oldest_active = Ods::getOAT(header);
-	const TraNumber oldest_snapshot = Ods::getOST(header);
+	const TraNumber next_transaction = header->hdr_next_transaction;
+	const TraNumber oldest_transaction = header->hdr_oldest_transaction;
+	const TraNumber oldest_active = header->hdr_oldest_active;
+	const TraNumber oldest_snapshot = header->hdr_oldest_snapshot;
 
 	if (next_transaction)
 	{
@@ -1726,15 +1724,15 @@ void PAG_set_db_readonly(thread_db* tdbb, bool flag)
 		// for att lock indefinitely.
 		Attachment* att = tdbb->getAttachment();
 		if (att->att_attachment_id)
-			Ods::writeAttID(header, att->att_attachment_id);
+			header->hdr_attachment_id = att->att_attachment_id;
 
 		// This is necessary as dbb's Next could be less than OAT.
 		// And this is safe as we currently in exclusive attachment and
 		// all executed transactions was read-only.
-		dbb->dbb_next_transaction = Ods::getNT(header);
-		dbb->dbb_oldest_transaction = Ods::getOIT(header);
-		dbb->dbb_oldest_active = Ods::getOAT(header);
-		dbb->dbb_oldest_snapshot = Ods::getOST(header);
+		dbb->dbb_next_transaction = header->hdr_next_transaction;
+		dbb->dbb_oldest_transaction = header->hdr_oldest_transaction;
+		dbb->dbb_oldest_active = header->hdr_oldest_active;
+		dbb->dbb_oldest_snapshot = header->hdr_oldest_snapshot;
 	}
 
 	CCH_MARK_MUST_WRITE(tdbb, &window);
