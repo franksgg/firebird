@@ -4610,13 +4610,13 @@ dsc* evlGetContext(thread_db* tdbb, const SysFunction*, const NestValueArray& ar
 		}
 		else if (nameStr == REPLICA_MODE)
 		{
-			if (dbb->dbb_replica_mode == REPLICA_READ_ONLY)
+			if (dbb->isReplica(REPLICA_READ_ONLY))
 				resultStr = RO_VALUE;
-			else if (dbb->dbb_replica_mode == REPLICA_READ_WRITE)
+			else if (dbb->isReplica(REPLICA_READ_WRITE))
 				resultStr = RW_VALUE;
 			else
 			{
-				fb_assert(dbb->dbb_replica_mode == REPLICA_NONE);
+				fb_assert(!dbb->isReplica());
 				return NULL;
 			}
 		}

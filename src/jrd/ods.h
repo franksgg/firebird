@@ -469,6 +469,9 @@ struct header_page
 	USHORT hdr_ods_version;				// Version of on-disk structure
 	USHORT hdr_ods_minor;				// Update version of ODS
 	USHORT hdr_flags;					// Flag settings, see below
+	UCHAR hdr_backup_mode;
+	UCHAR hdr_shutdown_mode;
+	UCHAR hdr_replica_mode;
 	ULONG hdr_PAGES;					// Page number of PAGES relation
 	ULONG hdr_page_buffers;				// Page buffers for database cache
 	FB_UINT64 hdr_next_transaction;		// Next transaction id
@@ -492,27 +495,30 @@ struct header_page
 	UCHAR hdr_data[1];					// Misc data
 };
 
-static_assert(sizeof(struct header_page) == 136, "struct header_page size mismatch");
+static_assert(sizeof(struct header_page) == 144, "struct header_page size mismatch");
 static_assert(offsetof(struct header_page, hdr_header) == 0, "hdr_header offset mismatch");
 static_assert(offsetof(struct header_page, hdr_page_size) == 16, "hdr_page_size offset mismatch");
 static_assert(offsetof(struct header_page, hdr_ods_version) == 18, "hdr_ods_version offset mismatch");
 static_assert(offsetof(struct header_page, hdr_ods_minor) == 20, "hdr_ods_minor offset mismatch");
 static_assert(offsetof(struct header_page, hdr_flags) == 22, "hdr_flags offset mismatch");
-static_assert(offsetof(struct header_page, hdr_PAGES) == 24, "hdr_PAGES offset mismatch");
-static_assert(offsetof(struct header_page, hdr_page_buffers) == 28, "hdr_page_buffers offset mismatch");
-static_assert(offsetof(struct header_page, hdr_next_transaction) == 32, "hdr_next_transaction offset mismatch");
-static_assert(offsetof(struct header_page, hdr_oldest_transaction) == 40, "hdr_oldest_transaction offset mismatch");
-static_assert(offsetof(struct header_page, hdr_oldest_active) == 48, "hdr_oldest_active offset mismatch");
-static_assert(offsetof(struct header_page, hdr_oldest_snapshot) == 56, "hdr_oldest_snapshot offset mismatch");
-static_assert(offsetof(struct header_page, hdr_attachment_id) == 64, "hdr_attachment_id offset mismatch");
-static_assert(offsetof(struct header_page, hdr_db_impl) == 72, "hdr_shadow_count offset mismatch");
-static_assert(offsetof(struct header_page, hdr_creation_date) == 76, "hdr_creation_date offset mismatch");
-static_assert(offsetof(struct header_page, hdr_shadow_count) == 84, "hdr_shadow_count offset mismatch");
-static_assert(offsetof(struct header_page, hdr_sequence) == 88, "hdr_sequence offset mismatch");
-static_assert(offsetof(struct header_page, hdr_end) == 90, "hdr_end offset mismatch");
-static_assert(offsetof(struct header_page, hdr_crypt_page) == 92, "hdr_crypt_page offset mismatch");
-static_assert(offsetof(struct header_page, hdr_crypt_plugin) == 96, "hdr_crypt_plugin offset mismatch");
-static_assert(offsetof(struct header_page, hdr_data) == 128, "hdr_data offset mismatch");
+static_assert(offsetof(struct header_page, hdr_backup_mode) == 24, "hdr_backup_mode offset mismatch");
+static_assert(offsetof(struct header_page, hdr_shutdown_mode) == 25, "hdr_shutdown_mode offset mismatch");
+static_assert(offsetof(struct header_page, hdr_replica_mode) == 26, "hdr_replica_mode offset mismatch");
+static_assert(offsetof(struct header_page, hdr_PAGES) == 28, "hdr_PAGES offset mismatch");
+static_assert(offsetof(struct header_page, hdr_page_buffers) == 32, "hdr_page_buffers offset mismatch");
+static_assert(offsetof(struct header_page, hdr_next_transaction) == 40, "hdr_next_transaction offset mismatch");
+static_assert(offsetof(struct header_page, hdr_oldest_transaction) == 48, "hdr_oldest_transaction offset mismatch");
+static_assert(offsetof(struct header_page, hdr_oldest_active) == 56, "hdr_oldest_active offset mismatch");
+static_assert(offsetof(struct header_page, hdr_oldest_snapshot) == 64, "hdr_oldest_snapshot offset mismatch");
+static_assert(offsetof(struct header_page, hdr_attachment_id) == 72, "hdr_attachment_id offset mismatch");
+static_assert(offsetof(struct header_page, hdr_db_impl) == 80, "hdr_shadow_count offset mismatch");
+static_assert(offsetof(struct header_page, hdr_creation_date) == 84, "hdr_creation_date offset mismatch");
+static_assert(offsetof(struct header_page, hdr_shadow_count) == 92, "hdr_shadow_count offset mismatch");
+static_assert(offsetof(struct header_page, hdr_sequence) == 96, "hdr_sequence offset mismatch");
+static_assert(offsetof(struct header_page, hdr_end) == 98, "hdr_end offset mismatch");
+static_assert(offsetof(struct header_page, hdr_crypt_page) == 100, "hdr_crypt_page offset mismatch");
+static_assert(offsetof(struct header_page, hdr_crypt_plugin) == 104, "hdr_crypt_plugin offset mismatch");
+static_assert(offsetof(struct header_page, hdr_data) == 136, "hdr_data offset mismatch");
 
 #define HDR_SIZE static_cast<FB_SIZE_T>(offsetof(Ods::header_page, hdr_data[0]))
 
@@ -546,26 +552,22 @@ inline constexpr USHORT hdr_SQL_dialect_3		= 0x10;		// 16	database SQL dialect 3
 inline constexpr USHORT hdr_read_only			= 0x20;		// 32	Database is ReadOnly. If not set, DB is RW
 inline constexpr USHORT hdr_encrypted			= 0x40;		// 64	Database is encrypted
 
-inline constexpr USHORT hdr_backup_mask			= 0xC00;
-inline constexpr USHORT hdr_shutdown_mask		= 0x1080;
-inline constexpr USHORT hdr_replica_mask		= 0x6000;
+// Values for backup mode
+inline constexpr UCHAR hdr_nbak_normal			= 0;			// Normal mode. Changes are simply written to main files
+inline constexpr UCHAR hdr_nbak_stalled			= 1;			// Main files are locked. Changes are written to diff file
+inline constexpr UCHAR hdr_nbak_merge			= 2;			// Merging changes from diff file into main files
+inline constexpr UCHAR hdr_nbak_unknown			= UCHAR(~0);	// State is unknown. Needs to be read from disk
 
-// Values for backup mask
-inline constexpr USHORT hdr_nbak_normal			= 0x000;	// Normal mode. Changes are simply written to main files
-inline constexpr USHORT hdr_nbak_stalled		= 0x400;	// 1024 Main files are locked. Changes are written to diff file
-inline constexpr USHORT hdr_nbak_merge			= 0x800;	// 2048 Merging changes from diff file into main files
-inline constexpr USHORT hdr_nbak_unknown		= USHORT(~0);	// State is unknown. Needs to be read from disk
+// Values for shutdown mode
+inline constexpr UCHAR hdr_shutdown_none		= 0;		// database is online
+inline constexpr UCHAR hdr_shutdown_multi		= 1;		// multi-user shutdown
+inline constexpr UCHAR hdr_shutdown_single		= 2;		// single-user shutdown
+inline constexpr UCHAR hdr_shutdown_full		= 3;		// full shutdown
 
-// Values for shutdown mask
-inline constexpr USHORT hdr_shutdown_none		= 0x0;
-inline constexpr USHORT hdr_shutdown_multi		= 0x80;
-inline constexpr USHORT hdr_shutdown_full		= 0x1000;
-inline constexpr USHORT hdr_shutdown_single		= 0x1080;
-
-// Values for replica mask
-inline constexpr USHORT hdr_replica_none		= 0x0000;
-inline constexpr USHORT hdr_replica_read_only	= 0x2000;
-inline constexpr USHORT hdr_replica_read_write	= 0x4000;
+// Values for replica mode
+inline constexpr UCHAR hdr_replica_none			= 0;		// database is not a replica
+inline constexpr UCHAR hdr_replica_read_only	= 1;		// read-only replica
+inline constexpr UCHAR hdr_replica_read_write	= 2;		// read-write replica
 
 
 // Page Inventory Page

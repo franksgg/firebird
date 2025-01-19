@@ -585,10 +585,10 @@ namespace Jrd {
 
 		const bool newCryptState = plugName.hasData();
 
-		int bak_state = Ods::hdr_nbak_unknown;
+		auto backupState = Ods::hdr_nbak_unknown;
 		{	// scope
 			BackupManager::StateReadGuard stateGuard(tdbb);
-			bak_state = dbb.dbb_backup_manager->getState();
+			backupState = dbb.dbb_backup_manager->getState();
 		}
 
 		{	// window scope
@@ -606,7 +606,7 @@ namespace Jrd {
 				(Arg::Gds(isc_cp_already_crypted)).raise();
 			}
 
-			if (bak_state != Ods::hdr_nbak_normal)
+			if (backupState != Ods::hdr_nbak_normal)
 			{
 				(Arg::Gds(isc_wish_list) << Arg::Gds(isc_random) <<
 					"Cannot crypt: please wait for nbackup completion").raise();
@@ -1117,13 +1117,13 @@ namespace Jrd {
 							JRD_reschedule(tdbb);
 
 							// nbackup state check
-							int bak_state = Ods::hdr_nbak_unknown;
+							auto backupState = Ods::hdr_nbak_unknown;
 							{	// scope
 								BackupManager::StateReadGuard stateGuard(tdbb);
-								bak_state = dbb.dbb_backup_manager->getState();
+								backupState = dbb.dbb_backup_manager->getState();
 							}
 
-							if (bak_state != Ods::hdr_nbak_normal)
+							if (backupState != Ods::hdr_nbak_normal)
 							{
 								EngineCheckout checkout(tdbb, FB_FUNCTION);
 								Thread::sleep(10);

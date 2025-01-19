@@ -1143,26 +1143,11 @@ void PAG_header(thread_db* tdbb, bool info, const TriState newForceWrite)
 	if (header->hdr_flags & hdr_no_reserve)
 		dbb->dbb_flags |= DBB_no_reserve;
 
-	const USHORT sd_flags = header->hdr_flags & hdr_shutdown_mask;
-	if (sd_flags)
-	{
-		dbb->dbb_ast_flags |= DBB_shutdown;
-		if (sd_flags == hdr_shutdown_full)
-			dbb->dbb_ast_flags |= DBB_shutdown_full;
-		else if (sd_flags == hdr_shutdown_single)
-			dbb->dbb_ast_flags |= DBB_shutdown_single;
-	}
+	const auto shutMode = (shut_mode_t) header->hdr_shutdown_mode;
+	dbb->dbb_shutdown_mode.store(shutMode, std::memory_order_relaxed);
 
-	const USHORT replica_mode = header->hdr_flags & hdr_replica_mask;
-	if (replica_mode)
-	{
-		if (replica_mode == hdr_replica_read_only)
-			dbb->dbb_replica_mode = REPLICA_READ_ONLY;
-		else if (replica_mode == hdr_replica_read_write)
-			dbb->dbb_replica_mode = REPLICA_READ_WRITE;
-		else
-			fb_assert(false);
-	}
+	const auto replicaMode = (ReplicaMode) header->hdr_replica_mode;
+	dbb->dbb_replica_mode.store(replicaMode, std::memory_order_relaxed);
 
 	// If database in backup lock state...
 	if (!info && dbb->dbb_backup_manager->getState() != Ods::hdr_nbak_normal)
@@ -1769,20 +1754,18 @@ void PAG_set_db_replica(thread_db* tdbb, ReplicaMode mode)
 
 	const auto dbb = tdbb->getDatabase();
 
-	header->hdr_flags &= ~(hdr_replica_read_only | hdr_replica_read_write);
-	fb_assert((header->hdr_flags & hdr_replica_mask) == hdr_replica_none);
-
 	switch (mode)
 	{
 	case REPLICA_NONE:
+		header->hdr_replica_mode = hdr_replica_none;
 		break;
 
 	case REPLICA_READ_ONLY:
-		header->hdr_flags |= hdr_replica_read_only;
+		header->hdr_replica_mode = hdr_replica_read_only;
 		break;
 
 	case REPLICA_READ_WRITE:
-		header->hdr_flags |= hdr_replica_read_write;
+		header->hdr_replica_mode = hdr_replica_read_write;
 		break;
 
 	default:
@@ -1791,7 +1774,7 @@ void PAG_set_db_replica(thread_db* tdbb, ReplicaMode mode)
 
 	CCH_RELEASE(tdbb, &window);
 
-	dbb->dbb_replica_mode = mode;
+	dbb->dbb_replica_mode.store(mode, std::memory_order_relaxed);
 }
 
 

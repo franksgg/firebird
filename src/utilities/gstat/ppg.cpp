@@ -97,63 +97,70 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 				time.tm_hour, time.tm_min, time.tm_sec);
 	}
 
-	if (const auto flags = header->hdr_flags)
-	{
-		int flag_count = 0;
+	uSvc->printf(false, "\tAttributes\t\t");
+	const auto flags = header->hdr_flags;
+	const auto nbakMode = header->hdr_backup_mode;
+	const auto shutMode = header->hdr_shutdown_mode;
+	const auto replMode = header->hdr_replica_mode;
 
-		uSvc->printf(false, "\tAttributes\t\t");
+	if (flags || nbakMode || shutMode || replMode)
+	{
+		int count = 0;
+
 		if (flags & hdr_force_write)
 		{
 			uSvc->printf(false, "force write");
-			flag_count++;
+			count++;
 		}
+
 		if (flags & hdr_no_reserve)
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
 			uSvc->printf(false, "no reserve");
 		}
-/*
-		if (flags & hdr_disable_cache)
-		{
-			if (flag_count++)
-				uSvc->printf(false, ", ");
-			uSvc->printf(false, "shared cache disabled");
-		}
-*/
+
 		if (flags & hdr_active_shadow)
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
 			uSvc->printf(false, "active shadow");
 		}
 
 		if (flags & hdr_encrypted)
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
 			uSvc->printf(false, "encrypted");
 		}
 
 		if (flags & hdr_crypt_process)
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
 			uSvc->printf(false, "crypt process");
 		}
 
 		if (flags & (hdr_encrypted | hdr_crypt_process))
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
 			uSvc->printf(false, "plugin %s", header->hdr_crypt_plugin);
 		}
 
-		if (flags & hdr_shutdown_mask)
+		if (flags & hdr_read_only)
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
-			switch (flags & hdr_shutdown_mask)
+			uSvc->printf(false, "read only");
+		}
+
+		if (shutMode)
+		{
+			if (count++)
+				uSvc->printf(false, ", ");
+
+			switch (shutMode)
 			{
 			case hdr_shutdown_multi:
 				uSvc->printf(false, "multi-user maintenance");
@@ -165,22 +172,16 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 				uSvc->printf(false, "full shutdown");
 				break;
 			default:
-				uSvc->printf(false, "wrong shutdown state %d", flags & hdr_shutdown_mask);
+				uSvc->printf(false, "wrong shutdown state %d", (int) shutMode);
 			}
 		}
 
-		if (flags & hdr_read_only)
+		if (nbakMode)
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
-			uSvc->printf(false, "read only");
-		}
 
-		if (flags & hdr_backup_mask)
-		{
-			if (flag_count++)
-				uSvc->printf(false, ", ");
-			switch (flags & hdr_backup_mask)
+			switch (nbakMode)
 			{
 			case Ods::hdr_nbak_stalled:
 				uSvc->printf(false, "backup lock");
@@ -189,15 +190,16 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 				uSvc->printf(false, "backup merge");
 				break;
 			default:
-				uSvc->printf(false, "wrong backup state %d", flags & hdr_backup_mask);
+				uSvc->printf(false, "wrong backup state %d", (int) nbakMode);
 			}
 		}
 
-		if (flags & hdr_replica_mask)
+		if (replMode)
 		{
-			if (flag_count++)
+			if (count++)
 				uSvc->printf(false, ", ");
-			switch (flags & hdr_replica_mask)
+
+			switch (replMode)
 			{
 			case Ods::hdr_replica_read_only:
 				uSvc->printf(false, "read-only replica");
@@ -206,7 +208,7 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 				uSvc->printf(false, "read-write replica");
 				break;
 			default:
-				uSvc->printf(false, "wrong replica state %d", flags & hdr_replica_mask);
+				uSvc->printf(false, "wrong replica state %d", (int) replMode);
 			}
 		}
 

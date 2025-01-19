@@ -849,11 +849,9 @@ void NBackup::fixup_database(bool repl_seq, bool set_readonly)
 	if (read_file(dbase, header, size) != size)
 		status_exception::raise(Arg::Gds(isc_nbackup_err_eofdb) << dbname.c_str());
 
-	const auto org_flags = header->hdr_flags;
 	const auto page_size = header->hdr_page_size;
 
-	const int backup_state = org_flags & Ods::hdr_backup_mask;
-	if (backup_state != Ods::hdr_nbak_stalled)
+	if (header->hdr_backup_mode != Ods::hdr_nbak_stalled)
 	{
 		status_exception::raise(Arg::Gds(isc_nbackup_fixup_wrongstate) << dbname.c_str() <<
 			Arg::Num(Ods::hdr_nbak_stalled));
@@ -891,13 +889,12 @@ void NBackup::fixup_database(bool repl_seq, bool set_readonly)
 		}
 	}
 
-	// Update the flags and write the header page back
+	// Update the backup mode and flags, write the header page back
 
-	const auto new_flags =
-		(org_flags & ~Ods::hdr_backup_mask) | Ods::hdr_nbak_normal |
-		(set_readonly ? Ods::hdr_read_only : 0);
+	header->hdr_backup_mode = Ods::hdr_nbak_normal;
 
-	header->hdr_flags = new_flags;
+	if (set_readonly)
+		header->hdr_flags |= Ods::hdr_read_only;
 
 	seek_file(dbase, 0);
 	write_file(dbase, header, size);
@@ -1364,7 +1361,7 @@ void NBackup::backup_database(int level, const string& guidStr, const PathName& 
 									Arg::Num(ODS_CURRENT));
 		}
 
-		if ((header->hdr_flags & Ods::hdr_backup_mask) != Ods::hdr_nbak_stalled)
+		if (header->hdr_backup_mode != Ods::hdr_nbak_stalled)
 			status_exception::raise(Arg::Gds(isc_nbackup_db_notlock) << Arg::Num(header->hdr_flags));
 
 		Array<UCHAR> page_buffer;
