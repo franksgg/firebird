@@ -1113,7 +1113,7 @@ void PAG_header_init(thread_db* tdbb)
 	PIO_header(tdbb, temp_page, headerSize);
 	const header_page* header = (header_page*) temp_page;
 
-	if (header->hdr_header.pag_type != pag_header || header->hdr_sequence)
+	if (header->hdr_header.pag_type != pag_header)
 		ERR_post(Arg::Gds(isc_bad_db_format) << Arg::Str(attachment->att_filename));
 
 	const USHORT ods_version = header->hdr_ods_version & ~ODS_FIREBIRD_FLAG;
@@ -1225,11 +1225,6 @@ void PAG_init2(thread_db* tdbb)
 		case HDR_sweep_interval:
 			fb_assert(p[1] == sizeof(SLONG));
 			memcpy(&dbb->dbb_sweep_interval, p + 2, sizeof(SLONG));
-			break;
-
-		case HDR_db_guid:
-			fb_assert(p[1] == Guid::SIZE);
-			dbb->dbb_guid = Guid(p + 2);
 			break;
 
 		case HDR_repl_seq:
@@ -1390,7 +1385,18 @@ void PAG_set_db_guid(thread_db* tdbb, const Guid& guid)
  *
  **************************************/
  	SET_TDBB(tdbb);
-	storeClump(tdbb, HDR_db_guid, Guid::SIZE, guid.getData());
+	ensureDbWritable(tdbb);
+
+	WIN window(HEADER_PAGE_NUMBER);
+	header_page* header = (header_page*) CCH_FETCH(tdbb, &window, LCK_write, pag_header);
+	CCH_MARK_MUST_WRITE(tdbb, &window);
+
+	const auto dbb = tdbb->getDatabase();
+
+	guid.copyTo(header->hdr_guid);
+	dbb->dbb_guid = guid;
+
+	CCH_RELEASE(tdbb, &window);
 }
 
 

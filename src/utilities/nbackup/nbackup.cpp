@@ -859,6 +859,9 @@ void NBackup::fixup_database(bool repl_seq, bool set_readonly)
 
 	if (!repl_seq)
 	{
+		// Replace existing database GUID with a regenerated one
+		Guid::generate().copyTo(header->hdr_guid);
+
 		size = page_size;
 		header = reinterpret_cast<Ods::header_page*>(header_buffer.getBuffer(size));
 
@@ -871,18 +874,13 @@ void NBackup::fixup_database(bool repl_seq, bool set_readonly)
 		const auto end = (UCHAR*) header + header->hdr_page_size;
 		while (p < end && *p != Ods::HDR_end)
 		{
-			if (*p == Ods::HDR_db_guid)
-			{
-				// Replace existing database GUID with a regenerated one
-				fb_assert(p[1] == Guid::SIZE);
-				Guid::generate().copyTo(p + 2);
-			}
-			else if (*p == Ods::HDR_repl_seq)
+			if (*p == Ods::HDR_repl_seq)
 			{
 				// Reset the sequence counter
 				const FB_UINT64 sequence = 0;
 				fb_assert(p[1] == sizeof(sequence));
 				memcpy(p + 2, &sequence, sizeof(sequence));
+				break;
 			}
 
 			p += p[1] + 2;

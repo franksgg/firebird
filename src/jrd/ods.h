@@ -486,16 +486,16 @@ struct header_page
 		UCHAR hdr_cc;					// Compiler of engine on which database was created
 		UCHAR hdr_compat;				// Cross-platform database transfer compatibility flags
 	} hdr_db_impl;
+	UCHAR hdr_guid[16];					// Database GUID
 	SLONG hdr_creation_date[2];			// Date/time of creation
 	SLONG hdr_shadow_count;				// Event count for shadow synchronization
-	USHORT hdr_sequence;				// sequence number of file
 	USHORT hdr_end;						// offset of HDR_end in page
 	ULONG hdr_crypt_page;				// Page at which processing is in progress
 	TEXT hdr_crypt_plugin[32];			// Name of plugin used to crypt this DB
 	UCHAR hdr_data[1];					// Misc data
 };
 
-static_assert(sizeof(struct header_page) == 144, "struct header_page size mismatch");
+static_assert(sizeof(struct header_page) == 160, "struct header_page size mismatch");
 static_assert(offsetof(struct header_page, hdr_header) == 0, "hdr_header offset mismatch");
 static_assert(offsetof(struct header_page, hdr_page_size) == 16, "hdr_page_size offset mismatch");
 static_assert(offsetof(struct header_page, hdr_ods_version) == 18, "hdr_ods_version offset mismatch");
@@ -512,13 +512,15 @@ static_assert(offsetof(struct header_page, hdr_oldest_active) == 56, "hdr_oldest
 static_assert(offsetof(struct header_page, hdr_oldest_snapshot) == 64, "hdr_oldest_snapshot offset mismatch");
 static_assert(offsetof(struct header_page, hdr_attachment_id) == 72, "hdr_attachment_id offset mismatch");
 static_assert(offsetof(struct header_page, hdr_db_impl) == 80, "hdr_shadow_count offset mismatch");
-static_assert(offsetof(struct header_page, hdr_creation_date) == 84, "hdr_creation_date offset mismatch");
-static_assert(offsetof(struct header_page, hdr_shadow_count) == 92, "hdr_shadow_count offset mismatch");
-static_assert(offsetof(struct header_page, hdr_sequence) == 96, "hdr_sequence offset mismatch");
-static_assert(offsetof(struct header_page, hdr_end) == 98, "hdr_end offset mismatch");
-static_assert(offsetof(struct header_page, hdr_crypt_page) == 100, "hdr_crypt_page offset mismatch");
-static_assert(offsetof(struct header_page, hdr_crypt_plugin) == 104, "hdr_crypt_plugin offset mismatch");
-static_assert(offsetof(struct header_page, hdr_data) == 136, "hdr_data offset mismatch");
+static_assert(offsetof(struct header_page, hdr_guid) == 84, "hdr_guid offset mismatch");
+static_assert(offsetof(struct header_page, hdr_creation_date) == 100, "hdr_creation_date offset mismatch");
+static_assert(offsetof(struct header_page, hdr_shadow_count) == 108, "hdr_shadow_count offset mismatch");
+static_assert(offsetof(struct header_page, hdr_end) == 112, "hdr_end offset mismatch");
+static_assert(offsetof(struct header_page, hdr_crypt_page) == 116, "hdr_crypt_page offset mismatch");
+static_assert(offsetof(struct header_page, hdr_crypt_plugin) == 120, "hdr_crypt_plugin offset mismatch");
+static_assert(offsetof(struct header_page, hdr_data) == 152, "hdr_data offset mismatch");
+
+static_assert(sizeof(header_page::hdr_guid) == Firebird::Guid::SIZE, "hdr_guid size mismatch");
 
 #define HDR_SIZE static_cast<FB_SIZE_T>(offsetof(Ods::header_page, hdr_data[0]))
 
@@ -538,7 +540,7 @@ inline constexpr UCHAR HDR_difference_file		= 6;	// Delta file that is used duri
 inline constexpr UCHAR HDR_backup_guid			= 7;	// GUID generated on each switch into backup mode
 inline constexpr UCHAR HDR_crypt_key			= 8;	// Name of a key used to crypt database
 inline constexpr UCHAR HDR_crypt_hash			= 9;	// Validator of key correctness
-inline constexpr UCHAR HDR_db_guid				= 10;	// Database GUID
+//inline constexpr UCHAR HDR_db_guid			= 10;	// Database GUID
 inline constexpr UCHAR HDR_repl_seq				= 11;	// Replication changelog sequence
 inline constexpr UCHAR HDR_max					= 11;	// Maximum HDR_clump value
 

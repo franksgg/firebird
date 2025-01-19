@@ -924,7 +924,6 @@ static void print_db_header( FILE* file, const header_page* header)
 	fprintf(file, "    Data pages per pointer page\t%ld\n", gdbb->tdbb_database->dbb_dp_per_pp);
 	fprintf(file, "    Max records per page\t%ld\n", gdbb->tdbb_database->dbb_max_records);
 
-	//fprintf ("    Sequence number    %d\n", header->hdr_sequence);
 	//fprintf ("    Creation date    \n", header->hdr_creation_date);
 
 	fprintf(file, "    Next attachment ID\t\t%ld\n", header->hdr_attachment_id);

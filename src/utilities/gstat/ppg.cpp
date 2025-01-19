@@ -66,7 +66,6 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 	uSvc->printf(false, "\tOldest active\t\t%" SQUADFORMAT"\n", header->hdr_oldest_active);
 	uSvc->printf(false, "\tOldest snapshot\t\t%" SQUADFORMAT"\n", header->hdr_oldest_snapshot);
 	uSvc->printf(false, "\tNext transaction\t%" SQUADFORMAT"\n", header->hdr_next_transaction);
-	uSvc->printf(false, "\tSequence number\t\t%d\n", header->hdr_sequence);
 	uSvc->printf(false, "\tNext attachment ID\t%" SQUADFORMAT"\n", header->hdr_attachment_id);
 
 	Firebird::DbImplementation imp(header);
@@ -89,6 +88,9 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 
 	if (!nocreation)
 	{
+		const Guid guid(header->hdr_guid);
+		uSvc->printf(false, "\tDatabase GUID:\t%s\n", guid.toString().c_str());
+
 		struct tm time;
 		isc_decode_timestamp(reinterpret_cast<const ISC_TIMESTAMP*>(header->hdr_creation_date),
 						&time);
@@ -263,14 +265,6 @@ void PPG_print_header(const header_page* header, bool nocreation, Firebird::Util
 		case HDR_crypt_checksum:
 			uSvc->printf(false, "\tCrypt checksum:\t%*.*s\n", p[1], p[1], p + 2);
 			break;
-
-		case HDR_db_guid:
-		{
-			fb_assert(p[1] == Guid::SIZE);
-			const Guid guid(p + 2);
-			uSvc->printf(false, "\tDatabase GUID:\t%s\n", guid.toString().c_str());
-			break;
-		}
 
 		case HDR_repl_seq:
 		{
