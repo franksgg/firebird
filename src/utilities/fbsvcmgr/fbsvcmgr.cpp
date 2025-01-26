@@ -512,6 +512,7 @@ const SvcSwitches statisticsOptions[] =
 	{"dbname", putStringArgument, 0, isc_spb_dbname, 0},
 	{"sts_record_versions", putOption, 0, isc_spb_sts_record_versions, 0},
 	{"sts_nocreation", putOption, 0, isc_spb_sts_nocreation, 0},
+	{"sts_schema", putStringArgument, 0, isc_spb_sts_schema, 0},
 	{"sts_table", putStringArgument, 0, isc_spb_sts_table, 0},
 	{"sts_data_pages", putOption, 0, isc_spb_sts_data_pages, 0},
 	{"sts_hdr_pages", putOption, 0, isc_spb_sts_hdr_pages, 0},
@@ -598,6 +599,8 @@ const SvcSwitches traceChgStateOptions[] =
 const SvcSwitches validateOptions[] =
 {
 	{"dbname", putStringArgument, 0, isc_spb_dbname, 0},
+	{"val_sch_incl", putStringArgument, 0, isc_spb_val_sch_incl, 0},
+	{"val_sch_excl", putStringArgument, 0, isc_spb_val_sch_excl, 0},
 	{"val_tab_incl", putStringArgument, 0, isc_spb_val_tab_incl, 0},
 	{"val_tab_excl", putStringArgument, 0, isc_spb_val_tab_excl, 0},
 	{"val_idx_incl", putStringArgument, 0, isc_spb_val_idx_incl, 0},
