@@ -1,5 +1,6 @@
-[![Build Status (GitHub)](https://github.com/FirebirdSQL/firebird/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/firebird/actions/workflows/main.yml?query=branch%3Amaster)
-[![Build Status (AppVeyor)](https://ci.appveyor.com/api/projects/status/github/FirebirdSQL/firebird?branch=master&svg=true)](https://ci.appveyor.com/project/FirebirdSQL/firebird)
+# WARNING
+
+This fork contains extensions to the original udf compatbility udr's that may lead to security risks. Use at your own risk and after careful revision of the changed cose.
 
 # Firebird README
 
