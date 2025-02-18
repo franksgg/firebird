@@ -1,6 +1,6 @@
 # WARNING
 
-This fork contains extensions to the original udf compatbility udr's that may lead to security risks. Use at your own risk and after careful revision of the changed cose.
+This fork contains extensions to the original udf compatbility udr's that may lead to security risks. Use at your own risk and after careful revision of the changed code.
 
 # Firebird README
 
