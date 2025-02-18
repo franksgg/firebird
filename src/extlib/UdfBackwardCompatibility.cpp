@@ -29,9 +29,21 @@
 #include <ibase.h>
 #include <firebird/UdrCppEngine.h>
 
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef LINUX
+#include <sys/sysinfo.h>
+#include <inttypes.h>
+#define INT64 int64_t
+#define EXPORT
+#else
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
 
 #ifdef HAVE_MATH_H
 #include <math.h>
@@ -353,6 +365,216 @@ FB_UDR_BEGIN_FUNCTION(UC_isLeapYear)
 FB_UDR_END_FUNCTION
 
 //------------------------------------------------------------------------------
+
+// db_udf ----------------------------------------------------------------------
+
+
+/***
+create function exec (
+	val varchar(1024)
+) returns integer
+	external name 'udf_compat!UC_exec'
+	engine udr;
+***/
+
+FB_UDR_BEGIN_FUNCTION(UC_exec)
+FB_UDR_MESSAGE(InMessage, (FB_VARCHAR(1024), name));
+FB_UDR_MESSAGE(OutMessage, (FB_INTEGER, result));
+FB_UDR_EXECUTE_FUNCTION
+{
+	out->resultNull = in->nameNull;
+	if (!out->resultNull)
+	{
+
+
+#ifdef LINUX
+		/* char   buffer[1064];
+		sprintf(buffer, "at -f %s now 1> /dev/null 2> /dev/null", in->name.str); */
+		out->result = system(in->name.str);
+	#else
+		HINSTANCE hInstance = ShellExecute(0, "open", in->name.str, NULL, NULL, SW_SHOWNORMAL);
+		int res = (int)hInstance;
+		if (res > 32)
+			out->result = 0;
+		else
+			out->result = res;
+	#endif
+		}
+}
+FB_UDR_END_FUNCTION
+
+/***
+create function free_ram () returns bigint
+	external name 'udf_compat!UC_free_ram'
+	engine udr;
+***/
+
+FB_UDR_BEGIN_FUNCTION(UC_free_ram)
+FB_UDR_MESSAGE(OutMessage, (FB_BIGINT, result));
+FB_UDR_EXECUTE_FUNCTION
+{
+out->resultNull = FB_FALSE;
+#ifdef LINUX
+  struct sysinfo info;
+  sysinfo(&info);
+
+  if (sysinfo(&info) != 0)
+  {
+	out->result = -1;
+  }
+  out->result = info.freeram*info.mem_unit;
+#else
+  MEMORYSTATUSEX lpBuffer;
+  lpBuffer.dwLength = sizeof(lpBuffer);
+  GlobalMemoryStatusEx(&lpBuffer);
+  out->result = lpBuffer.ullAvailPhys;
+#endif
+}
+FB_UDR_END_FUNCTION
+
+/***
+create function free_swap () returns bigint
+	external name 'udf_compat!UC_free_swap'
+	engine udr;
+***/
+
+FB_UDR_BEGIN_FUNCTION(UC_free_swap)
+FB_UDR_MESSAGE(OutMessage, (FB_BIGINT, result));
+FB_UDR_EXECUTE_FUNCTION
+{
+out->resultNull = FB_FALSE;
+#ifdef LINUX
+  struct sysinfo info;
+  sysinfo(&info);
+
+  if (sysinfo(&info) != 0)
+  {
+	out->result = -1;
+  }
+  out->result = info.freeswap*info.mem_unit;
+#else
+  MEMORYSTATUSEX lpBuffer;
+  lpBuffer.dwLength = sizeof(lpBuffer);
+  GlobalMemoryStatusEx(&lpBuffer);
+  out->result = lpBuffer.ullAvailPageFile;
+#endif
+}
+FB_UDR_END_FUNCTION
+
+/***
+create function total_swap () returns bigint
+	external name 'udf_compat!UC_total_swap'
+	engine udr;
+***/
+
+FB_UDR_BEGIN_FUNCTION(UC_total_swap)
+FB_UDR_MESSAGE(OutMessage, (FB_BIGINT, result));
+FB_UDR_EXECUTE_FUNCTION
+{
+out->resultNull = FB_FALSE;
+#ifdef LINUX
+  struct sysinfo info;
+  sysinfo(&info);
+
+  if (sysinfo(&info) != 0)
+  {
+	out->result = -1;
+  }
+  out->result = info.totalswap*info.mem_unit;
+#else
+  MEMORYSTATUSEX lpBuffer;
+  lpBuffer.dwLength = sizeof(lpBuffer);
+  GlobalMemoryStatusEx(&lpBuffer);
+  out->result = lpBuffer.ullTotalPageFile;
+#endif
+}
+FB_UDR_END_FUNCTION
+
+/***
+create function total_ram () returns bigint
+	external name 'udf_compat!UC_total_ram'
+	engine udr;
+***/
+
+FB_UDR_BEGIN_FUNCTION(UC_total_ram)
+FB_UDR_MESSAGE(OutMessage, (FB_BIGINT, result));
+FB_UDR_EXECUTE_FUNCTION
+{
+out->resultNull = FB_FALSE;
+#ifdef LINUX
+  struct sysinfo info;
+  sysinfo(&info);
+
+  if (sysinfo(&info) != 0)
+  {
+	out->result = -1;
+  }
+  out->result = info.totalram*info.mem_unit;
+#else
+  MEMORYSTATUSEX lpBuffer;
+  lpBuffer.dwLength = sizeof(lpBuffer);
+  GlobalMemoryStatusEx(&lpBuffer);
+  out->result = lpBuffer.ullTotalPhys;
+#endif
+}
+FB_UDR_END_FUNCTION
+
+
+// rfunc -----------------------------------------------------------------------
+/***
+create function b_loadfromfile (
+	VAL varchar(1024))
+	returns blob
+	external name 'udf_compat!UC_b_load'
+	engine udr;
+***/
+
+
+FB_UDR_BEGIN_FUNCTION(UC_b_load)
+FB_UDR_MESSAGE(InMessage, (FB_VARCHAR(1024), name));
+FB_UDR_MESSAGE(OutMessage, (FB_BLOB, result));
+
+FB_UDR_EXECUTE_FUNCTION
+{
+  out->resultNull = in->nameNull;
+if (!out->resultNull)
+{
+	isc_db_handle dbHandle = Helper::getIscDbHandle(status, context);
+	isc_tr_handle trHandle = Helper::getIscTrHandle(status, context);
+	BLOB_load(&out->result, dbHandle, trHandle, in->name.str);
+}
+}
+
+FB_UDR_END_FUNCTION
+
+// rfunc -----------------------------------------------------------------------
+/***
+create function b_savetofile (
+	VAL varchar(1024),
+	B blob )
+	returns integer
+	external name 'udf_compat!UC_b_save'
+	engine udr;
+***/
+
+
+FB_UDR_BEGIN_FUNCTION(UC_b_save)
+FB_UDR_MESSAGE(InMessage, (FB_VARCHAR(1024), name)
+						   (FB_BLOB, b	));
+FB_UDR_MESSAGE(OutMessage, (FB_INTEGER, result));
+
+FB_UDR_EXECUTE_FUNCTION
+{
+  out->resultNull = in->nameNull;
+if (!out->resultNull)
+{
+	isc_db_handle dbHandle = Helper::getIscDbHandle(status, context);
+	isc_tr_handle trHandle = Helper::getIscTrHandle(status, context);
+	BLOB_dump(&in->b, dbHandle, trHandle, in->name.str);
+}
+}
+
+FB_UDR_END_FUNCTION
 
 
 // This should be used in only one of the UDR library files.

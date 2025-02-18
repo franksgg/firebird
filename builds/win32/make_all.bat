@@ -8,7 +8,7 @@ set ERRLEV=0
 
 :: verify that boot was run before
 
-@if not exist %FB_BIN_DIR%\firebird.msg (goto :HELP_BOOT & goto :EOF)
+@if not exist %FB_BIN_DIR%\firebird.msg (echo %FB_BIN_DIR%\firebird.msg not found & goto :HELP_BOOT & goto :EOF)
 
 
 ::==========
@@ -66,7 +66,7 @@ if errorlevel 1 call :ERROR build failed - see make_all_%FB_TARGET_PLATFORM%.log
 	copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\ib_util\ib_util.lib %FB_OUTPUT_DIR%\lib\ib_util_ms.lib >nul
 )
 
-for %%v in (gpre_boot build_msg common_test engine_test isql_test) do (
+for %%v in (gpre_boot build_msg common_test engine_test) do (
 	@del %FB_OUTPUT_DIR%\%%v.* 2>nul
 )
 
@@ -85,7 +85,7 @@ for %%v in (gpre_boot build_msg common_test engine_test isql_test) do (
 	copy %FB_ROOT_PATH%\src\plugins\udr_engine\udr_engine.conf %FB_OUTPUT_DIR%\plugins\udr_engine.conf >nul
 
 	:: DATABASES
-	copy %FB_GEN_DIR%\dbs\security6.FDB %FB_OUTPUT_DIR%\security6.fdb >nul
+	copy %FB_GEN_DIR%\dbs\security5.FDB %FB_OUTPUT_DIR%\security5.fdb >nul
 
 	:: DOCS
 	copy %FB_ROOT_PATH%\*.md %FB_OUTPUT_DIR%\doc\ >nul
@@ -125,7 +125,7 @@ copy "%VCToolsRedistDir%\%VSCMD_ARG_TGT_ARCH%\Microsoft.VC%MSVC_RUNTIME_LIBRARY_
 ::==============
 :HELP_BOOT
 @echo.
-@echo    You must run make_boot.bat before running this script
+@echo    You must run make_boot.bat [Debug] before running this script
 @echo.
 @goto :EOF
 
