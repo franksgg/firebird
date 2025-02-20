@@ -7,12 +7,12 @@
 */
 
 #define PRODUCT_VER_STRING "6.0.0.640"
-#define FILE_VER_STRING "WI-T6.0.0.640"
-#define LICENSE_VER_STRING "WI-T6.0.0.640"
+#define FILE_VER_STRING "WI-P6.0.0.640"
+#define LICENSE_VER_STRING "WI-P6.0.0.640"
 #define FILE_VER_NUMBER 6, 0, 0, 640
 #define FB_MAJOR_VER "6"
 #define FB_MINOR_VER "0"
 #define FB_REV_NO "0"
 #define FB_BUILD_NO "640"
-#define FB_BUILD_TYPE "T"
-#define FB_BUILD_SUFFIX "Firebird 6.0 Initial"
+#define FB_BUILD_TYPE "P"
+#define FB_BUILD_SUFFIX "Firebird 6.0 fsg"
