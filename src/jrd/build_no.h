@@ -3,7 +3,7 @@
                *** DO NOT EDIT ***
   TO CHANGE ANY INFORMATION IN HERE PLEASE
   EDIT src/misc/writeBuildNum.sh
-  FORMAL BUILD NUMBER:640
+  FORMAL BUILD NUMBER:647
 */
 
 #define PRODUCT_VER_STRING "6.0.0.640"

@@ -371,7 +371,7 @@ struct index_root_page
 									// alignment between 32-bit and 64-bit builds
 	struct irt_repeat
 	{
-		friend class index_root_page;	// to allow offset check for private members
+		friend struct index_root_page;	// to allow offset check for private members
 
 	private:
 		FB_UINT64 irt_transaction;		// transaction in progress
@@ -383,7 +383,7 @@ struct index_root_page
 		UCHAR irt_state;				// index state
 		UCHAR irt_keys;					// number of keys in index
 	private:
-		USHORT irt_dummy;				// alignment to 8-byte boundary
+		[[maybe_unused]] USHORT irt_dummy;	// alignment to 8-byte boundary
 
 	public:
 		TraNumber inProgress() const;
@@ -480,8 +480,7 @@ inline ULONG index_root_page::irt_repeat::getRoot() const
 
 inline void index_root_page::irt_repeat::setRoot(ULONG rootPage)
 {
-	fb_assert(irt_state == irt_in_progress);
-	fb_assert(!irt_page_num && !irt_page_space_id);
+	fb_assert(irt_state == irt_in_progress || irt_state == irt_normal);
 	fb_assert(rootPage);
 
 	irt_transaction = 0;
